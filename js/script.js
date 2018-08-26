@@ -20,9 +20,9 @@ $studentItems.each(function(index){
 });
 //takes in list and page number to know what and how much to show
 const visibleDisplay = (list, page) =>{
+  //hides everything by default
+  $studentItems.hide();
   for(i = 0; i < list.length; i++){
-    //hides everything by default
-    list[i].hide();
     //shows only the page to the current page
     if(i < (page + 1) * 10){
       if(i > 10 * page - 1){
@@ -50,7 +50,7 @@ buttonDisplay = (itemTotal) => {
     $pageList.append($button);
   }
 }
-buttonDisplay($studentItems.length);
+buttonDisplay($searchItems.length);
 
 //adds the ul to the div
 $pageButtons.append($pageList);
@@ -78,21 +78,21 @@ $searchButton.on('click', function(){
   $searchItems = [];
   //resets page to 0
   pgnum = 0;
-  searchName = $searchInput.val()
+  searchName = $searchInput.val();
   //check through each student item for matching strings
   $studentItems.each(function(index){
     if($(this).find('h3').text().includes(searchName)){
-      //add anything that matches to the search list
       $searchItems.push($(this));
     }
   });
+
   //notifies if no results found after clicking search
   if($searchItems.length == 0){
     $pageHeader.append($('<h2 class="alert">Sorry no search results found.</p>'))
   }else{
     $('.alert').hide();
+    //updates page and number of buttons
   }
-  //updates page and number of buttons
   visibleDisplay($searchItems,pgnum);
   buttonDisplay($searchItems.length);
 });
