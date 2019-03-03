@@ -7,92 +7,81 @@ const $searchDiv = $('<div class="student-search"></div>');
 const $searchInput = $('<input placeholder="Search for students...">');
 const $searchButton = $('<button>Search</button>');
 
-let $searchItems = [];
-let $button;
-let pgnum = 0;
-let searchName = "";
-
-// Create a function to hide all of the items in the list excpet for the ten you want to show
-// Tip: Keep in mind that with a list of 54 studetns, the last page will only display four
-//adds students to the list
-$studentItems.each(function(index){
-  $searchItems.push($(this));
-});
-//takes in list and page number to know what and how much to show
-const visibleDisplay = (list, page) => {
-  //hides everything by default
-  $studentItems.hide();
-  for(i = 0; i < list.length; i++){
-    //shows only the page to the current page
-    if(i < (page + 1) * 10){
-      if(i > 10 * page - 1){
-        list[i].show();
-      }
-    }
-  }
-}
-visibleDisplay($searchItems, pgnum);
-// Create and append the pagination links - Creating a function that can do this is a good approach
-//takes a list.length value to determine number of buttons
-buttonDisplay = (itemTotal) => {
-  //resets list links displayed
-  $pageList.empty();
-  //makes new links
-  for(i = 0; i < Math.ceil(itemTotal / 10); i++){
-    //adds buttons with respective numbers to the ul
-    //gives active class to first page by default
-    if(i === 0){
-      $button = $('<li><a href="#" class="active">' + (i + 1) + '</a></li>');
-    }else{
-      $button = $('<li><a href="#" class"search">' + (i + 1) + '</a></li>');
-    }
-    //adds the button to the new list of links
-    $pageList.append($button);
-  }
-}
-buttonDisplay($searchItems.length);
-
-//adds the ul to the div
-$pageButtons.append($pageList);
-
-// Add functionality to the pagination buttons so that they show and hide the correct items
-// Tip: If you created a function above to show/hide list items, it could be helpful here
-$pageButtons.on('click', function(e){
-  //reassigning acive button
-  $('a').removeClass('active')
-  //update page number
-  pgnum = $(e.target).text() - 1;
-  //display which page is active
-  $(e.target).addClass('active');
-  //update page
-  visibleDisplay($searchItems,pgnum)
-});
-
 //appending search bar
 $searchDiv.append($searchInput);
 $searchDiv.append($searchButton);
 $pageHeader.append($searchDiv);
-//search functionality
-$searchButton.on('click', function(){
-  //clears list on search
-  $searchItems = [];
-  //resets page to 0
-  pgnum = 0;
-  searchName = $searchInput.val();
-  //check through each student item for matching strings
-  $studentItems.each(function(index){
-    if($(this).find('h3').text().includes(searchName)){
-      $searchItems.push($(this));
+
+//returns matches from searched
+const search = (searchName, list) => {
+  $searchItems = list.filter(item => {
+    if($(list[item]).find('h3').text().includes(searchName)){
+      return list[item];
+    }else{
     }
   });
+  return $searchItems;
+}
 
-  //notifies if no results found after clicking search
+//list, page, and an interval to know what and how much to show
+const displayStudents = ({list, page = 0, interval = 10} = {}) => {
+  //hides everything by default
+  $studentItems.hide();
+  list.each(function (index,element){
+    //shows only the page to the current page
+    if(index < (page + 1) * interval){
+      if(index > interval * page - 1){
+         $(element).show();
+      }
+    }
+  })
+}
+
+//takes a list.length value to determine number of buttons
+const buttonDisplay = ({itemTotal, interval = 10} = {}) => {
+  //resets list links displayed
+  $pageList.empty();
+
+  for(i = 0; i < Math.ceil(itemTotal / interval); i++){
+    let $button = $('<li><a href="#" class"search">' + (i + 1) + '</a></li>');
+    if(i === 0){
+      $button = $('<li><a href="#" class"search active">' + (i + 1) + '</a></li>');
+    }
+    $pageList.append($button);
+  }
+  $pageButtons.append($pageList);
+}
+
+const updateButtons = evnt => {
+  const pgnum = $(evnt.target).text() - 1;
+  $('a').removeClass('active')
+  $(evnt.target).addClass('active');
+  displayStudents({
+    list: $searchItems,
+    page: pgnum
+  });
+}
+
+//load first 10 items without search filter
+displayStudents({list: $studentItems});
+buttonDisplay({itemTotal: $studentItems.length});
+let $searchItems = $studentItems;
+
+//changes page
+$pageButtons.on('click', function(e){
+  if(e.target.tagName == 'A'){
+    updateButtons(e);
+  }
+});
+
+//search functionality
+$searchButton.on('click', function(){
+  $searchItems = search($searchInput.val(),$studentItems);
   if($searchItems.length == 0){
     $pageHeader.append($('<h2 class="alert">Sorry no search results found.</p>'))
   }else{
     $('.alert').hide();
-    //updates page and number of buttons
+    displayStudents({list: $searchItems});
+    buttonDisplay({itemTotal: $searchItems.length});
   }
-  visibleDisplay($searchItems,pgnum);
-  buttonDisplay($searchItems.length);
 });
